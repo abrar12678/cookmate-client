@@ -39,14 +39,21 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Token is now in an httpOnly cookie — just check /auth/me
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsLoading(false);
+      return;
+    }
+    // Validate token with server
     api
       .get("/auth/me")
       .then((res) => {
         setUser(res.data.data.user);
       })
       .catch(() => {
-        // Not authenticated — that's fine
+        // Token invalid or expired — clear it
+        localStorage.removeItem("token");
         setUser(null);
       })
       .finally(() => setIsLoading(false));
@@ -55,15 +62,15 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const loginFn = async (email: string, password: string): Promise<boolean> => {
     try {
       const res = await api.post("/auth/login", { email, password });
-      // Server sets httpOnly cookie — no localStorage needed
-      const { user: userData } = res.data.data;
+      const { user: userData, token } = res.data.data;
+      if (token) localStorage.setItem("token", token);
       setUser(userData);
       toast.success("Logged in successfully!");
       return true;
     } catch (error: unknown) {
       const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Login failed";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Login failed";
       toast.error(msg);
       return false;
     }
@@ -76,15 +83,15 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   ): Promise<boolean> => {
     try {
       const res = await api.post("/auth/register", { name, email, password });
-      // Server sets httpOnly cookie — no localStorage needed
-      const { user: userData } = res.data.data;
+      const { user: userData, token } = res.data.data;
+      if (token) localStorage.setItem("token", token);
       setUser(userData);
       toast.success("Account created successfully!");
       return true;
     } catch (error: unknown) {
       const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Registration failed";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Registration failed";
       toast.error(msg);
       return false;
     }
@@ -92,11 +99,11 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutFn = async () => {
     try {
-      // Tell server to clear the httpOnly cookie
       await api.post("/auth/logout");
     } catch {
       // Even if the API call fails, clear local state
     }
+    localStorage.removeItem("token");
     setUser(null);
     toast.info("Logged out");
     router.push("/");
@@ -108,7 +115,14 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, loginFn, registerFn, logoutFn, __triggerRefresh }}
+      value={{
+        user,
+        isLoading,
+        loginFn,
+        registerFn,
+        logoutFn,
+        __triggerRefresh,
+      }}
     >
       {children}
     </AuthContext.Provider>
