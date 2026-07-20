@@ -1,26 +1,344 @@
 @import "tailwindcss";
+@import "react-toastify/dist/ReactToastify.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary-50: #fff3ea;
+  --color-primary-100: #ffe0c7;
+  --color-primary-200: #ffc78f;
+  --color-primary-300: #ffa84d;
+  --color-primary-400: #f49022;
+  --color-primary-500: #e85d04;
+  --color-primary-600: #c74b03;
+  --color-primary-700: #9e3a06;
+  --color-primary-800: #7a2a00;
+
+  --color-secondary-50: #eaf5ee;
+  --color-secondary-100: #c7e6cf;
+  --color-secondary-200: #96d1a6;
+  --color-secondary-300: #5fb87a;
+  --color-secondary-400: #3d9f5c;
+  --color-secondary-500: #2d6a4f;
+  --color-secondary-600: #245740;
+  --color-secondary-700: #1c4333;
+  --color-secondary-800: #0f281e;
+
+  --color-accent: #fefae0;
+
+  --color-neutral-50: #f9f9f9;
+  --color-neutral-100: #f0f0f0;
+  --color-neutral-200: #e0e0e0;
+  --color-neutral-300: #c8c8c8;
+  --color-neutral-400: #a0a0a0;
+  --color-neutral-500: #787878;
+  --color-neutral-600: #5a5a5a;
+  --color-neutral-700: #3a3a3a;
+  --color-neutral-800: #1b1b1b;
+  --color-neutral-900: #121212;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ─── Dark mode body defaults ─── */
+.dark body {
+  background-color: #121212;
+  color: #f0f0f0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ─── Dark mode toast overrides ─── */
+.dark .Toastify__toast-theme--light {
+  background-color: #2a2a2a;
+  color: #f0f0f0;
+}
+.dark .Toastify__close-button {
+  color: #a0a0a0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PREMIUM HOVER ANIMATIONS — CookMate AI
+   Real-world quality micro-interactions
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Shimmer Effect (loading skeletons) ─── */
+@keyframes cms-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.cms-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(128, 128, 128, 0.1) 25%,
+    rgba(128, 128, 128, 0.2) 50%,
+    rgba(128, 128, 128, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: cms-shimmer 1.5s ease-in-out infinite;
+}
+
+/* ─── Smooth Scale on Hover ─── */
+@keyframes cms-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 93, 4, 0); }
+  50% { box-shadow: 0 0 0 8px rgba(232, 93, 4, 0.08); }
+}
+
+/* ─── Premium Button Hover ─── */
+.btn-premium {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-premium::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+.btn-premium:hover::before {
+  width: 300px;
+  height: 300px;
+}
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15),
+              0 4px 10px -6px rgba(0, 0, 0, 0.1);
+}
+.btn-premium:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* ─── Premium Card Hover ─── */
+.card-premium {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-premium:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 20px 40px -12px rgba(0, 0, 0, 0.12),
+    0 8px 16px -8px rgba(0, 0, 0, 0.08);
+}
+.dark .card-premium:hover {
+  box-shadow:
+    0 20px 40px -12px rgba(0, 0, 0, 0.4),
+    0 8px 16px -8px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Premium Link Hover ─── */
+.link-premium {
+  position: relative;
+  transition: color 0.3s ease;
+}
+.link-premium::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 1px;
+}
+.link-premium:hover::after {
+  width: 100%;
+}
+
+/* ─── Premium Input Focus ─── */
+.input-premium {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+}
+.input-premium:hover {
+  border-color: #e0e0e0;
+}
+.input-premium:focus {
+  border-color: #e85d04;
+  box-shadow: 0 0 0 4px rgba(232, 93, 4, 0.1);
+  transform: translateY(-1px);
+}
+.dark .input-premium:hover {
+  border-color: #5a5a5a;
+}
+.dark .input-premium:focus {
+  border-color: #e85d04;
+  box-shadow: 0 0 0 4px rgba(232, 93, 4, 0.2);
+}
+
+/* ─── Premium Icon Bounce ─── */
+.icon-bounce {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.icon-bounce:hover {
+  transform: scale(1.2) rotate(-5deg);
+}
+
+/* ─── Fade In Up Animation ─── */
+@keyframes cms-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
+.animate-fade-in-up {
+  animation: cms-fade-in-up 0.5s ease-out forwards;
+}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ─── Stagger children animation ─── */
+.stagger-children > * {
+  opacity: 0;
+  animation: cms-fade-in-up 0.4s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.5s; }
+.stagger-children > *:nth-child(11) { animation-delay: 0.55s; }
+.stagger-children > *:nth-child(12) { animation-delay: 0.6s; }
+
+/* ─── Gradient Border on Hover ─── */
+@keyframes cms-border-rotate {
+  0% { --border-angle: 0deg; }
+  100% { --border-angle: 360deg; }
+}
+.gradient-border-hover {
+  position: relative;
+  transition: all 0.3s ease;
+}
+.gradient-border-hover::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #e85d04, #ffa84d, #e85d04);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+.gradient-border-hover:hover::before {
+  opacity: 1;
+}
+
+/* ─── Premium Tag/Badge Hover ─── */
+.badge-premium {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.badge-premium:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+/* ─── Smooth Page Transitions ─── */
+@keyframes cms-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-enter {
+  animation: cms-page-enter 0.35s ease-out;
+}
+
+/* ─── Tooltip Style ─── */
+.tooltip-premium {
+  position: relative;
+}
+.tooltip-premium::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 6px 12px;
+  background: #1b1b1b;
+  color: #f0f0f0;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 8px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 50;
+}
+.tooltip-premium::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  border: 5px solid transparent;
+  border-top-color: #1b1b1b;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 50;
+}
+.tooltip-premium:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.tooltip-premium:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ─── Selection Color ─── */
+::selection {
+  background: rgba(232, 93, 4, 0.2);
+  color: inherit;
+}
+
+/* ─── Smooth Scroll ─── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ─── Scrollbar Styling ─── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c8c8c8;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #5a5a5a;
+}
+
+/* ─── Hide scrollbar utility ─── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
