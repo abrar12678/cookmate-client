@@ -262,7 +262,11 @@ function GeneratorContent() {
         difficulty,
         cookingTime: Number(result.cookingTime) || 30,
         servings: result.servings || 4,
-        ingredients: result.ingredients,
+        ingredients: (result.ingredients || []).map((ing: Ingredient) => ({
+          name: String(ing.name ?? ""),
+          qty: String(ing.qty ?? ""),
+          unit: String(ing.unit ?? ""),
+        })),
         instructions: normalizedInstructions,
         image: "",
       });
