@@ -517,16 +517,23 @@ function GeneratorContent() {
                   Instructions
                 </h3>
                 <ol className="space-y-2">
-                  {result.instructions?.map((step: string, i: number) => (
-                    <li key={i} className="flex gap-3">
-                      <span className="bg-primary-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                        {i + 1}
-                      </span>
-                      <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                        {step}
-                      </p>
-                    </li>
-                  ))}
+                  {result.instructions?.map(
+                    (
+                      step: string | { step?: string; action?: string },
+                      i: number,
+                    ) => (
+                      <li key={i} className="flex gap-3">
+                        <span className="bg-primary-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                          {i + 1}
+                        </span>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                          {typeof step === "string"
+                            ? step
+                            : step.step || step.action || JSON.stringify(step)}
+                        </p>
+                      </li>
+                    ),
+                  )}
                 </ol>
               </div>
 
