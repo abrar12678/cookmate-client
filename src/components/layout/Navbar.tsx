@@ -19,6 +19,12 @@ import {
   Sun,
   Moon,
   ShieldCheck,
+  LayoutDashboard,
+  Users,
+  BookMarked,
+  MessageSquare,
+  Mail,
+  Newspaper,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 
@@ -29,12 +35,24 @@ const publicLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-const authLinks = [
+// USER-ONLY links — admin এগুলো পাবে না
+const userLinks = [
   { label: "AI Generator", href: "/ai/generator", icon: Sparkles },
   { label: "AI Analyzer", href: "/ai/analyzer", icon: ScanSearch },
   { label: "Add Recipe", href: "/recipe/add", icon: Plus },
   { label: "My Recipes", href: "/recipe/manage", icon: BookOpen },
   { label: "Favorites", href: "/favorites", icon: Heart },
+  { label: "Profile", href: "/profile", icon: User },
+];
+
+// ADMIN-ONLY links — user এগুলো পাবে না
+const adminLinks = [
+  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Recipes", href: "/admin/recipes", icon: BookMarked },
+  { label: "Reviews", href: "/admin/reviews", icon: MessageSquare },
+  { label: "Contacts", href: "/admin/contacts", icon: Mail },
+  { label: "Newsletters", href: "/admin/newsletters", icon: Newspaper },
   { label: "Profile", href: "/profile", icon: User },
 ];
 
@@ -46,6 +64,10 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  const isAdmin = user?.role === "admin";
+  // ← KEY SEPARATION: admin শুধু adminLinks, user শুধু userLinks দেখবে
+  const navLinks = isAdmin ? adminLinks : userLinks;
+
   const handleLogout = () => {
     setDropdownOpen(false);
     logoutFn();
@@ -53,6 +75,11 @@ export default function Navbar() {
   };
 
   const closeMobile = () => setMobileOpen(false);
+
+  const isActive = (href: string) =>
+    href === "/admin"
+      ? pathname === "/admin"
+      : pathname === href || pathname?.startsWith(href + "/");
 
   return (
     <>
@@ -86,13 +113,16 @@ export default function Navbar() {
 
             {/* Desktop — Right side */}
             <div className="hidden md:flex items-center gap-3">
-              {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-lg text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
                 aria-label="Toggle theme"
               >
-                {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {isDark ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
               </button>
 
               {!user ? (
@@ -122,6 +152,7 @@ export default function Navbar() {
                         onClick={() => setDropdownOpen(false)}
                       />
                       <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-neutral-800 rounded-xl shadow-xl border border-neutral-200 dark:border-neutral-700 py-2 z-50">
+                        {/* User info + role badge */}
                         <div className="px-4 py-2.5 border-b border-neutral-100 dark:border-neutral-700">
                           <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
                             {user.name}
@@ -129,8 +160,18 @@ export default function Navbar() {
                           <p className="text-xs text-neutral-400">
                             {user.email}
                           </p>
+                          <span
+                            className={`inline-block mt-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                              isAdmin
+                                ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400"
+                                : "bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-400"
+                            }`}
+                          >
+                            {isAdmin ? "Admin" : "User"}
+                          </span>
                         </div>
-                        {authLinks.map((link) => {
+                        {/* Role-separated nav links */}
+                        {navLinks.map((link) => {
                           const Icon = link.icon;
                           return (
                             <Link
@@ -138,8 +179,10 @@ export default function Navbar() {
                               href={link.href}
                               onClick={() => setDropdownOpen(false)}
                               className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors ${
-                                pathname === link.href
-                                  ? "text-primary-500 font-semibold bg-primary-50 dark:bg-primary-500/10"
+                                isActive(link.href)
+                                  ? isAdmin
+                                    ? "text-amber-600 dark:text-amber-400 font-semibold bg-amber-50 dark:bg-amber-500/10"
+                                    : "text-primary-500 font-semibold bg-primary-50 dark:bg-primary-500/10"
                                   : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-700"
                               }`}
                             >
@@ -148,20 +191,6 @@ export default function Navbar() {
                             </Link>
                           );
                         })}
-                        {user.role === "admin" && (
-                          <Link
-                            href="/admin"
-                            onClick={() => setDropdownOpen(false)}
-                            className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors ${
-                              pathname?.startsWith("/admin")
-                                ? "text-primary-500 font-semibold bg-primary-50 dark:bg-primary-500/10"
-                                : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-700"
-                            }`}
-                          >
-                            <ShieldCheck className="h-4 w-4" />
-                            Admin Panel
-                          </Link>
-                        )}
                         <div className="my-1 border-t border-neutral-100 dark:border-neutral-700" />
                         <button
                           onClick={handleLogout}
@@ -183,7 +212,11 @@ export default function Navbar() {
                 onClick={toggleTheme}
                 className="p-2 rounded-lg text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
               >
-                {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {isDark ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
               </button>
               <button
                 onClick={() => setMobileOpen(true)}
@@ -211,7 +244,9 @@ export default function Navbar() {
         }`}
       >
         <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
-          <span className="text-lg font-bold text-neutral-800 dark:text-neutral-100">Menu</span>
+          <span className="text-lg font-bold text-neutral-800 dark:text-neutral-100">
+            Menu
+          </span>
           <button
             onClick={closeMobile}
             className="p-1.5 rounded-lg text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
@@ -239,30 +274,39 @@ export default function Navbar() {
           {user ? (
             <>
               <div className="my-2 border-t border-neutral-100 dark:border-neutral-700" />
-              {authLinks.map((link) => {
+              <div className="px-4 py-2">
+                <span
+                  className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                    isAdmin
+                      ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400"
+                      : "bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-400"
+                  }`}
+                >
+                  {isAdmin ? "Admin Panel" : "My Account"}
+                </span>
+              </div>
+              {navLinks.map((link) => {
                 const Icon = link.icon;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={closeMobile}
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
+                      isActive(link.href)
+                        ? isAdmin
+                          ? "text-amber-600 dark:text-amber-400 font-semibold bg-amber-50 dark:hover:bg-amber-500/10"
+                          : "text-primary-500 font-semibold bg-primary-50 dark:bg-primary-500/10"
+                        : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                    }`}
                   >
-                    <Icon className="h-4 w-4 text-primary-500" />
+                    <Icon
+                      className={`h-4 w-4 ${isActive(link.href) ? (isAdmin ? "text-amber-500" : "text-primary-500") : "text-primary-500"}`}
+                    />
                     {link.label}
                   </Link>
                 );
               })}
-              {user?.role === "admin" && (
-                <Link
-                  href="/admin"
-                  onClick={closeMobile}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10"
-                >
-                  <ShieldCheck className="h-4 w-4" />
-                  Admin Panel
-                </Link>
-              )}
 
               <div className="my-2 border-t border-neutral-100 dark:border-neutral-700" />
               <div className="px-4 py-2 mb-2">
