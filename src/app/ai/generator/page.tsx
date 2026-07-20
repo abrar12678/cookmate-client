@@ -218,16 +218,52 @@ function GeneratorContent() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!result) return;
+
+      // Normalize instructions: Groq may return {step, action} objects instead of strings
+      const normalizedInstructions = (result.instructions || []).map(
+        (step: string | { step?: string; action?: string }) =>
+          typeof step === "string"
+            ? step
+            : step.step || step.action || JSON.stringify(step),
+      );
+
+      // Ensure descriptions meet server-side minimum length requirements
+      const shortDesc =
+        result.shortDescription && result.shortDescription.length >= 10
+          ? result.shortDescription
+          : `${result.title} - A delicious ${result.cuisine || "homemade"} recipe ready in ${result.cookingTime || 30} minutes`;
+
+      const fullDesc =
+        result.shortDescription && result.shortDescription.length >= 20
+          ? result.shortDescription
+          : `${result.title} is a ${result.difficulty || "medium"} difficulty ${result.cuisine || ""} recipe that takes about ${result.cookingTime || 30} minutes to prepare. It uses fresh ingredients including ${
+              result.ingredients
+                ?.slice(0, 3)
+                .map((i: Ingredient) => i.name)
+                .join(", ") || "various ingredients"
+            } and is perfect for ${result.servings || 4} servings.`;
+
+      // Normalize difficulty to match server enum
+      const rawDiff = (result.difficulty || "Medium").toLowerCase();
+      const difficulty =
+        rawDiff.includes("easy") || rawDiff.includes("beginner")
+          ? "Easy"
+          : rawDiff.includes("hard") ||
+              rawDiff.includes("advanced") ||
+              rawDiff.includes("expert")
+            ? "Hard"
+            : "Medium";
+
       await api.post("/recipes", {
         title: result.title,
-        shortDescription: result.shortDescription || "",
-        fullDescription: result.shortDescription || "",
-        cuisine: result.cuisine || "",
-        difficulty: result.difficulty || "Medium",
+        shortDescription: shortDesc,
+        fullDescription: fullDesc,
+        cuisine: result.cuisine || "Other",
+        difficulty,
         cookingTime: Number(result.cookingTime) || 30,
-        servings: 4,
+        servings: result.servings || 4,
         ingredients: result.ingredients,
-        instructions: result.instructions,
+        instructions: normalizedInstructions,
         image: "",
       });
     },
@@ -235,8 +271,11 @@ function GeneratorContent() {
       toast.success("Recipe saved to your collection!");
       router.push("/recipe/manage");
     },
-    onError: () => {
-      toast.error("Failed to save recipe");
+    onError: (error) => {
+      const msg =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to save recipe";
+      toast.error(msg);
     },
   });
 

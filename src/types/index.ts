@@ -97,6 +97,7 @@ export interface NutritionInfo {
 }
 
 export interface GeneratedRecipe {
+  servings: number;
   title: string;
   shortDescription?: string;
   cuisine?: string;
