@@ -129,8 +129,11 @@ function GeneratorContent() {
       addAssistantMessage(recipe);
       setIsGenerating(false);
     },
-    onError: () => {
-      toast.error("Failed to generate recipe");
+    onError: (error) => {
+      const msg =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to generate recipe";
+      toast.error(msg);
       setChatMessages((prev) => prev.slice(0, -1));
       setIsGenerating(false);
     },
@@ -167,8 +170,11 @@ function GeneratorContent() {
       addAssistantMessage(recipe);
       setIsGenerating(false);
     },
-    onError: () => {
-      toast.error("Failed to process follow-up");
+    onError: (error) => {
+      const msg =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to process follow-up";
+      toast.error(msg);
       setChatMessages((prev) => prev.slice(0, -1));
       setIsGenerating(false);
     },

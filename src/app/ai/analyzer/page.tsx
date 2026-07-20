@@ -1,12 +1,28 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, DragEvent, FormEvent } from "react";
+import {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  DragEvent,
+  FormEvent,
+} from "react";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { toast } from "react-toastify";
 import AuthGuard from "@/components/layout/AuthGuard";
 import Button from "@/components/ui/Button";
-import { Upload, Loader2, Search, Lightbulb, Send, MessageSquare, Bot, User } from "lucide-react";
+import {
+  Upload,
+  Loader2,
+  Search,
+  Lightbulb,
+  Send,
+  MessageSquare,
+  Bot,
+  User,
+} from "lucide-react";
 import type { FoodAnalysis, ApiResponse } from "@/types";
 
 const COLORS = ["#2D6A4F", "#E85D04", "#1B1B1B"];
@@ -28,7 +44,13 @@ const SUGGESTED_PROMPTS = [
   "How to make it healthier?",
 ];
 
-function NutritionDonut({ data, colors }: { data: ChartDatum[]; colors: string[] }) {
+function NutritionDonut({
+  data,
+  colors,
+}: {
+  data: ChartDatum[];
+  colors: string[];
+}) {
   const total = data.reduce((sum, d) => sum + d.value, 0);
   if (total === 0) return null;
 
@@ -51,7 +73,9 @@ function NutritionDonut({ data, colors }: { data: ChartDatum[]; colors: string[]
         }}
       />
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-sm font-bold text-neutral-600 dark:text-neutral-300">{total}g</span>
+        <span className="text-sm font-bold text-neutral-600 dark:text-neutral-300">
+          {total}g
+        </span>
       </div>
     </div>
   );
@@ -130,7 +154,7 @@ function AnalyzerContent() {
     mutationFn: async (payload) => {
       const res = await api.post<ApiResponse<{ analysis: FoodAnalysis }>>(
         "/ai/analyze-food",
-        payload
+        payload,
       );
       return res.data;
     },
@@ -150,21 +174,32 @@ function AnalyzerContent() {
           return [
             ...prev,
             { role: "user", content: question },
-            { role: "assistant", content: JSON.stringify(analysis), dishName: analysis.dishName },
+            {
+              role: "assistant",
+              content: JSON.stringify(analysis),
+              dishName: analysis.dishName,
+            },
           ];
         }
         return [
           ...prev,
           { role: "user", content: "Analyzed food image" },
-          { role: "assistant", content: JSON.stringify(analysis), dishName: analysis.dishName },
+          {
+            role: "assistant",
+            content: JSON.stringify(analysis),
+            dishName: analysis.dishName,
+          },
         ];
       });
 
       currentFollowUpRef.current = "";
       setFollowUp("");
     },
-    onError: () => {
-      toast.error("Failed to analyze food image");
+    onError: (error) => {
+      const msg =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to analyze food image";
+      toast.error(msg);
       setIsAnalyzing(false);
     },
   });
@@ -294,7 +329,9 @@ function AnalyzerContent() {
                 </h3>
                 <span className="ml-auto text-xs text-neutral-400 dark:text-neutral-500">
                   {chatMessages.filter((m) => m.role === "user").length}{" "}
-                  {chatMessages.filter((m) => m.role === "user").length === 1 ? "exchange" : "exchanges"}
+                  {chatMessages.filter((m) => m.role === "user").length === 1
+                    ? "exchange"
+                    : "exchanges"}
                 </span>
               </div>
               <div className="max-h-[320px] overflow-y-auto divide-y divide-neutral-100 dark:divide-neutral-800">
@@ -403,7 +440,10 @@ function AnalyzerContent() {
                     <NutritionDonut data={chartData} colors={COLORS} />
                     <div className="space-y-3">
                       {chartData.map((item, i) => (
-                        <div key={item.name} className="flex items-center gap-3">
+                        <div
+                          key={item.name}
+                          className="flex items-center gap-3"
+                        >
                           <div
                             className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: COLORS[i] }}
@@ -477,7 +517,10 @@ function AnalyzerContent() {
               </div>
 
               {/* Follow-up Input */}
-              <form onSubmit={handleFollowUpSubmit} className="flex items-center gap-2">
+              <form
+                onSubmit={handleFollowUpSubmit}
+                className="flex items-center gap-2"
+              >
                 <input
                   ref={followUpRef}
                   type="text"
