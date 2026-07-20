@@ -11,7 +11,7 @@ const features = [
     icon: ScanLine,
     title: "Smart Food Analyzer",
     description:
-      "Upload a food photo and get instant nutritional analysis. Identify dishes, estimate calories, protein, carbs, and fat with remarkable accuracy.",
+      "Describe any food or dish and get instant nutritional analysis. Identify ingredients, estimate calories, protein, carbs, and fat with AI-powered accuracy.",
   },
   {
     icon: Users,

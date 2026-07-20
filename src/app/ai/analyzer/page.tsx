@@ -1,20 +1,12 @@
 "use client";
 
-import {
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
-  DragEvent,
-  FormEvent,
-} from "react";
+import { useState, useRef, useEffect, FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { toast } from "react-toastify";
 import AuthGuard from "@/components/layout/AuthGuard";
 import Button from "@/components/ui/Button";
 import {
-  Upload,
   Loader2,
   Search,
   Lightbulb,
@@ -22,6 +14,7 @@ import {
   MessageSquare,
   Bot,
   User,
+  UtensilsCrossed,
 } from "lucide-react";
 import type { FoodAnalysis, ApiResponse } from "@/types";
 
@@ -42,6 +35,13 @@ const SUGGESTED_PROMPTS = [
   "Is this dish healthy?",
   "Suggest a side dish",
   "How to make it healthier?",
+];
+
+const EXAMPLE_DESCRIPTIONS = [
+  "Chicken Biryani with raita and salad",
+  "Margherita pizza with mozzarella cheese",
+  "Grilled salmon with roasted vegetables",
+  "Chicken Tikka Masala with naan bread",
 ];
 
 function NutritionDonut({
@@ -87,15 +87,13 @@ function truncate(str: string, max: number) {
 }
 
 function AnalyzerContent() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const followUpRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const currentFollowUpRef = useRef<string>("");
 
-  const [preview, setPreview] = useState<string | null>(null);
+  const [foodInput, setFoodInput] = useState("");
   const [result, setResult] = useState<FoodAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
   const [followUp, setFollowUp] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
@@ -103,53 +101,10 @@ function AnalyzerContent() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages, result]);
 
-  const handleFile = (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be under 5MB");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result as string);
-      setResult(null);
-      setFollowUp("");
-      setChatMessages([]);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  }, []);
-
-  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  const removeImage = () => {
-    setPreview(null);
-    setResult(null);
-    setFollowUp("");
-    setChatMessages([]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
   const analyzeMutation = useMutation<
     ApiResponse<{ analysis: FoodAnalysis }>,
     Error,
-    { imageBase64: string; messages?: ChatMessage[]; followUp?: string }
+    { foodDescription: string; messages?: ChatMessage[]; followUp?: string }
   >({
     mutationFn: async (payload) => {
       const res = await api.post<ApiResponse<{ analysis: FoodAnalysis }>>(
@@ -183,7 +138,7 @@ function AnalyzerContent() {
         }
         return [
           ...prev,
-          { role: "user", content: "Analyzed food image" },
+          { role: "user", content: foodInput },
           {
             role: "assistant",
             content: JSON.stringify(analysis),
@@ -198,25 +153,26 @@ function AnalyzerContent() {
     onError: (error) => {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message || "Failed to analyze food image";
+          ?.data?.message || "Failed to analyze food";
       toast.error(msg);
       setIsAnalyzing(false);
     },
   });
 
   const handleAnalyze = () => {
-    if (!preview) return;
+    const trimmed = foodInput.trim();
+    if (!trimmed) return;
     currentFollowUpRef.current = "";
-    analyzeMutation.mutate({ imageBase64: preview });
+    analyzeMutation.mutate({ foodDescription: trimmed });
   };
 
   const handleFollowUp = (question?: string) => {
     const q = question || followUp.trim();
-    if (!q || !preview) return;
+    if (!q || !foodInput.trim()) return;
     currentFollowUpRef.current = q;
     setFollowUp("");
     analyzeMutation.mutate({
-      imageBase64: preview,
+      foodDescription: foodInput.trim(),
       messages: chatMessages,
       followUp: q,
     });
@@ -232,6 +188,13 @@ function AnalyzerContent() {
     handleFollowUp(prompt);
   };
 
+  const handleExampleClick = (desc: string) => {
+    setFoodInput(desc);
+    setResult(null);
+    setFollowUp("");
+    setChatMessages([]);
+  };
+
   const chartData: ChartDatum[] = result?.nutrition
     ? [
         { name: "Protein", value: parseInt(result.nutrition.protein) || 0 },
@@ -243,7 +206,7 @@ function AnalyzerContent() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {/* LEFT — Upload + Chat History */}
+        {/* LEFT — Text Input + Chat History */}
         <div className="space-y-6">
           <div className="flex items-center gap-2 mb-2">
             <Search className="h-7 w-7 text-primary-500" />
@@ -252,72 +215,57 @@ function AnalyzerContent() {
             </h1>
           </div>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files?.[0]) handleFile(e.target.files[0]);
-            }}
-          />
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            Describe any food or dish and AI will analyze its nutrition,
+            ingredients, and provide dietary suggestions.
+          </p>
 
-          {/* Dropzone */}
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            className={`border-2 border-dashed rounded-2xl p-10 text-center transition-colors cursor-pointer ${
-              isDragging
-                ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-                : preview
-                  ? "border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50"
-                  : "border-neutral-300 dark:border-neutral-600 hover:border-primary-500"
-            }`}
-          >
-            {!preview ? (
-              <>
-                <Upload className="h-12 w-12 text-neutral-300 dark:text-neutral-600 mx-auto mb-3" />
-                <p className="text-neutral-600 dark:text-neutral-300 font-medium">
-                  Click to upload or drag & drop
-                </p>
-                <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-1">
-                  PNG, JPG up to 5MB
-                </p>
-              </>
-            ) : (
-              <div className="space-y-4">
-                <img
-                  src={preview}
-                  alt="Preview"
-                  className="max-h-64 rounded-xl mx-auto object-contain"
-                />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeImage();
-                  }}
-                  className="text-sm text-red-500 hover:underline font-medium cursor-pointer"
-                >
-                  Remove Image
-                </button>
-              </div>
-            )}
+          {/* Food Description Input */}
+          <div>
+            <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5 block">
+              Describe the food
+            </label>
+            <textarea
+              value={foodInput}
+              onChange={(e) => setFoodInput(e.target.value)}
+              placeholder="e.g., Chicken Biryani with raita, grilled chicken, basmati rice, saffron, yogurt, fried onions..."
+              rows={4}
+              className="input-premium w-full border border-neutral-300 dark:border-neutral-600 rounded-xl px-4 py-3 text-sm bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100 outline-none resize-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+            />
           </div>
 
-          {preview && !result && (
-            <Button
-              onClick={handleAnalyze}
-              isLoading={isAnalyzing}
-              disabled={isAnalyzing}
-              className="w-full"
-              size="lg"
-            >
-              <Search className="h-5 w-5 mr-2" />
-              Analyze Food
-            </Button>
+          {/* Example suggestions */}
+          {!result && !isAnalyzing && (
+            <div>
+              <p className="text-xs font-medium text-neutral-400 dark:text-neutral-500 mb-2">
+                Try an example:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {EXAMPLE_DESCRIPTIONS.map((desc) => (
+                  <button
+                    key={desc}
+                    type="button"
+                    onClick={() => handleExampleClick(desc)}
+                    className="btn-premium inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 bg-white dark:bg-neutral-800 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer"
+                  >
+                    <UtensilsCrossed className="h-3 w-3" />
+                    {desc}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
+
+          <Button
+            onClick={handleAnalyze}
+            isLoading={isAnalyzing}
+            disabled={isAnalyzing || !foodInput.trim()}
+            className="w-full"
+            size="lg"
+          >
+            <Search className="h-5 w-5 mr-2" />
+            Analyze Food
+          </Button>
 
           {/* Chat History Panel */}
           {chatMessages.length > 0 && (
@@ -385,7 +333,11 @@ function AnalyzerContent() {
                 <Search className="h-9 w-9 text-primary-300 dark:text-primary-600" />
               </div>
               <p className="text-neutral-400 dark:text-neutral-500 text-lg">
-                Upload a food image to see analysis
+                Describe a food to see analysis
+              </p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-2 max-w-xs">
+                Type a dish name with details like ingredients, cooking method,
+                or cuisine for better analysis.
               </p>
             </div>
           )}
@@ -396,7 +348,7 @@ function AnalyzerContent() {
               <p className="text-neutral-500 dark:text-neutral-400">
                 {currentFollowUpRef.current || chatMessages.length > 0
                   ? "Thinking about your follow-up..."
-                  : "Analyzing your food image..."}
+                  : "Analyzing your food description..."}
               </p>
             </div>
           )}
