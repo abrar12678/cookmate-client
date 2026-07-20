@@ -609,7 +609,7 @@ function GeneratorContent() {
                     onClick={handleFollowUpSubmit}
                     disabled={!followUpInput.trim() || isGenerating}
                     isLoading={followUpMutation.isPending}
-                    size="default"
+                    size="md"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
