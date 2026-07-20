@@ -40,6 +40,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   // Close drawer on route change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDrawerOpen(false);
   }, [pathname]);
 
@@ -54,11 +55,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   if (!user || user.role !== "admin") {
     return null;
   }
-
-  const isActive = (href: string) =>
-    href === "/admin"
-      ? pathname === "/admin"
-      : pathname.startsWith(href.href !== "/admin" ? href : "");
 
   const navContent = (
     <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
