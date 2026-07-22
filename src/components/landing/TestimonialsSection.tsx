@@ -2,23 +2,19 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { MessageSquare, Star } from "lucide-react";
+import api from "@/lib/axios";
 import { TESTIMONIALS } from "@/constants";
 import type { Testimonial } from "@/constants";
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-}
+import type { ApiResponse } from "@/types";
 
 export default function TestimonialsSection() {
   const { data } = useQuery<ApiResponse<{ testimonials: Testimonial[] }>>({
     queryKey: ["testimonials"],
     queryFn: async () => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/stats/testimonials`,
+      const res = await api.get<ApiResponse<{ testimonials: Testimonial[] }>>(
+        "/stats/testimonials"
       );
-      const json = await res.json();
-      return json;
+      return res.data;
     },
     staleTime: 15 * 60 * 1000, // 15 min cache
   });

@@ -7,6 +7,8 @@ import { toast } from "react-toastify";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { Mail, MapPin, Clock, Send } from "lucide-react";
+import { getErrorMessage } from "@/lib/utils";
+import { validateContactForm, type ValidationErrors } from "@/lib/validation";
 
 const contactInfo = [
   { icon: Mail, title: "Email", detail: "support@cookmateai.com", sub: "We reply within 24 hours" },
@@ -16,9 +18,14 @@ const contactInfo = [
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
-  const update = (field: string, value: string) =>
+  const update = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
 
   const contactMutation = useMutation({
     mutationFn: async () => {
@@ -27,21 +34,21 @@ export default function ContactPage() {
     onSuccess: () => {
       toast.success("Message sent successfully!");
       setForm({ name: "", email: "", subject: "", message: "" });
+      setErrors({});
     },
     onError: (error: unknown) => {
-      const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Failed to send message";
-      toast.error(msg);
+      toast.error(getErrorMessage(error, "Failed to send message"));
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.message) {
-      toast.warning("Please fill in all required fields");
+    const validationErrors = validateContactForm(form);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
+    setErrors({});
     contactMutation.mutate();
   };
 
@@ -61,6 +68,7 @@ export default function ContactPage() {
             placeholder="Your full name"
             value={form.name}
             onChange={(e) => update("name", e.target.value)}
+            error={errors.name}
           />
           <Input
             label="Email"
@@ -69,12 +77,14 @@ export default function ContactPage() {
             icon={<Mail className="h-4 w-4" />}
             value={form.email}
             onChange={(e) => update("email", e.target.value)}
+            error={errors.email}
           />
           <Input
             label="Subject"
             placeholder="What is this about?"
             value={form.subject}
             onChange={(e) => update("subject", e.target.value)}
+            error={errors.subject}
           />
           <div>
             <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5 block">
@@ -87,8 +97,11 @@ export default function ContactPage() {
               onChange={(e) => update("message", e.target.value)}
               className="input-premium w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-4 py-2.5 text-sm dark:bg-neutral-800 dark:text-neutral-100 outline-none resize-none"
             />
+            {errors.message && (
+              <p className="text-xs text-red-500 mt-1">{errors.message}</p>
+            )}
           </div>
-          <Button type="submit" size="lg" className="w-full sm:w-auto" isLoading={contactMutation.isPending}>
+          <Button type="submit" size="lg" className="w-full sm:w-auto cursor-pointer" isLoading={contactMutation.isPending}>
             <Send className="h-4 w-4 mr-1.5" />
             Send Message
           </Button>

@@ -18,7 +18,6 @@ import {
   Heart,
   Sun,
   Moon,
-  ShieldCheck,
   LayoutDashboard,
   Users,
   BookMarked,

@@ -10,6 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { toast } from "react-toastify";
+import { getErrorMessage } from "@/lib/utils";
 import type { User } from "@/types";
 
 interface AuthContextType {
@@ -68,10 +69,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       toast.success("Logged in successfully!");
       return true;
     } catch (error: unknown) {
-      const msg =
-        (error as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message || "Login failed";
-      toast.error(msg);
+      toast.error(getErrorMessage(error, "Login failed"));
       return false;
     }
   };
@@ -89,10 +87,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       toast.success("Account created successfully!");
       return true;
     } catch (error: unknown) {
-      const msg =
-        (error as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message || "Registration failed";
-      toast.error(msg);
+      toast.error(getErrorMessage(error, "Registration failed"));
       return false;
     }
   };

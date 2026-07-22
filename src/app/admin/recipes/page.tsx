@@ -8,7 +8,6 @@ import {
   Search,
   Trash2,
   Star,
-  StarOff,
   ChevronLeft,
   ChevronRight,
   BookOpen,

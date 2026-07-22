@@ -1,6 +1,7 @@
 "use client";
 
 import { Component, type ReactNode } from "react";
+import Link from "next/link";
 import { AlertTriangle, RotateCcw, Home } from "lucide-react";
 import Button from "@/components/ui/Button";
 
@@ -66,12 +67,12 @@ export default class ErrorBoundary extends Component<Props, State> {
                 <RotateCcw className="h-4 w-4 mr-1.5" />
                 Try Again
               </Button>
-              <a href="/">
+              <Link href="/">
                 <Button>
                   <Home className="h-4 w-4 mr-1.5" />
                   Go Home
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
         </div>

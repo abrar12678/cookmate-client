@@ -11,6 +11,9 @@ import { Plus, Trash2, Upload, Loader2 } from "lucide-react";
 import type { Recipe, Ingredient, Difficulty } from "@/types";
 import { SELECT_CLASS_FULL, CUISINE_OPTIONS, DIFFICULTY_OPTIONS } from "@/constants";
 
+import { getErrorMessage } from "@/lib/utils";
+import { validateRecipeForm, type ValidationErrors } from "@/lib/validation";
+
 interface RecipeFormProps {
   mode: "create" | "edit";
   initialData?: Recipe;
@@ -41,9 +44,13 @@ export default function RecipeForm({ mode, initialData, recipeId }: RecipeFormPr
     initialData?.instructions?.length ? initialData.instructions : [""]
   );
   const [isUploading, setIsUploading] = useState(false);
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
 
   const updateIngredient = (index: number, field: keyof Ingredient, value: string) => {
@@ -52,6 +59,9 @@ export default function RecipeForm({ mode, initialData, recipeId }: RecipeFormPr
       updated[index] = { ...updated[index], [field]: value };
       return updated;
     });
+    if (errors.ingredients) {
+      setErrors((prev) => ({ ...prev, ingredients: undefined }));
+    }
   };
 
   const addIngredient = () =>
@@ -71,6 +81,9 @@ export default function RecipeForm({ mode, initialData, recipeId }: RecipeFormPr
       updated[index] = value;
       return updated;
     });
+    if (errors.instructions) {
+      setErrors((prev) => ({ ...prev, instructions: undefined }));
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,8 +97,8 @@ export default function RecipeForm({ mode, initialData, recipeId }: RecipeFormPr
         const res = await api.post("/upload", { base64 });
         setForm((prev) => ({ ...prev, image: res.data.data.url }));
         toast.success("Image uploaded!");
-      } catch {
-        toast.error("Failed to upload image");
+      } catch (err) {
+        toast.error(getErrorMessage(err, "Failed to upload image"));
       } finally {
         setIsUploading(false);
       }
@@ -107,8 +120,8 @@ export default function RecipeForm({ mode, initialData, recipeId }: RecipeFormPr
       toast.success("Recipe created successfully!");
       router.push("/recipe/manage");
     },
-    onError: () => {
-      toast.error("Failed to create recipe");
+    onError: (err) => {
+      toast.error(getErrorMessage(err, "Failed to create recipe"));
     },
   });
 
@@ -126,8 +139,8 @@ export default function RecipeForm({ mode, initialData, recipeId }: RecipeFormPr
       toast.success("Recipe updated successfully!");
       router.push("/recipe/manage");
     },
-    onError: () => {
-      toast.error("Failed to update recipe");
+    onError: (err) => {
+      toast.error(getErrorMessage(err, "Failed to update recipe"));
     },
   });
 
@@ -135,20 +148,19 @@ export default function RecipeForm({ mode, initialData, recipeId }: RecipeFormPr
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title || !form.shortDescription || !form.fullDescription) {
-      toast.warning("Please fill in all required fields");
+    const validationErrors = validateRecipeForm({
+      ...form,
+      ingredients,
+      instructions,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.warning("Please resolve form validation errors");
       return;
     }
-    const validIngredients = ingredients.filter((i) => i.name.trim());
-    const validInstructions = instructions.filter((s) => s.trim());
-    if (validIngredients.length === 0) {
-      toast.warning("Add at least one ingredient");
-      return;
-    }
-    if (validInstructions.length === 0) {
-      toast.warning("Add at least one instruction step");
-      return;
-    }
+
+    setErrors({});
     activeMutation.mutate();
   };
 
@@ -167,6 +179,7 @@ export default function RecipeForm({ mode, initialData, recipeId }: RecipeFormPr
               placeholder="e.g., Spaghetti Carbonara"
               value={form.title}
               onChange={(e) => updateField("title", e.target.value)}
+              error={errors.title}
             />
           </div>
           <div className="md:col-span-2">
@@ -180,6 +193,9 @@ export default function RecipeForm({ mode, initialData, recipeId }: RecipeFormPr
               onChange={(e) => updateField("shortDescription", e.target.value)}
               className="input-premium mt-1.5 w-full border border-neutral-300 dark:border-neutral-600 rounded-xl px-4 py-2.5 text-sm text-neutral-800 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none"
             />
+            {errors.shortDescription && (
+              <p className="text-xs text-red-500 mt-1">{errors.shortDescription}</p>
+            )}
           </div>
           <div className="md:col-span-2">
             <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
@@ -192,6 +208,9 @@ export default function RecipeForm({ mode, initialData, recipeId }: RecipeFormPr
               onChange={(e) => updateField("fullDescription", e.target.value)}
               className="input-premium mt-1.5 w-full border border-neutral-300 dark:border-neutral-600 rounded-xl px-4 py-2.5 text-sm text-neutral-800 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none resize-none"
             />
+            {errors.fullDescription && (
+              <p className="text-xs text-red-500 mt-1">{errors.fullDescription}</p>
+            )}
           </div>
           <div>
             <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
@@ -232,6 +251,7 @@ export default function RecipeForm({ mode, initialData, recipeId }: RecipeFormPr
               placeholder="30"
               value={form.cookingTime}
               onChange={(e) => updateField("cookingTime", e.target.value)}
+              error={errors.cookingTime}
             />
             <span className="text-xs text-neutral-400 mt-1 block">in minutes</span>
           </div>
@@ -242,6 +262,7 @@ export default function RecipeForm({ mode, initialData, recipeId }: RecipeFormPr
               placeholder="4"
               value={form.servings}
               onChange={(e) => updateField("servings", e.target.value)}
+              error={errors.servings}
             />
             <span className="text-xs text-neutral-400 mt-1 block">number of people</span>
           </div>

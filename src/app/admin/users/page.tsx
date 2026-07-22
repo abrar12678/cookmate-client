@@ -60,7 +60,7 @@ export default function AdminUsersPage() {
     onError: () => toast.error("Failed to delete user"),
   });
 
-  const PaginationBar = () => {
+  const renderPagination = () => {
     if (!pagination || pagination.totalPages <= 1) return null;
     return (
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4 border-t border-neutral-100 dark:border-neutral-700">
@@ -348,7 +348,7 @@ export default function AdminUsersPage() {
             </table>
           </div>
 
-          <PaginationBar />
+          {renderPagination()}
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Users, Star, Globe } from "lucide-react";
+import api from "@/lib/axios";
 import type { SiteStats, ApiResponse } from "@/types";
 
 const defaultStats = [
@@ -21,9 +22,8 @@ export default function StatsSection() {
   const { data } = useQuery<ApiResponse<SiteStats>>({
     queryKey: ["stats"],
     queryFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stats`);
-      const json: ApiResponse<SiteStats> = await res.json();
-      return json;
+      const res = await api.get<ApiResponse<SiteStats>>("/stats");
+      return res.data;
     },
     staleTime: 10 * 60 * 1000,
   });

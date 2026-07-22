@@ -54,11 +54,10 @@ function NutritionDonut({
   const total = data.reduce((sum, d) => sum + d.value, 0);
   if (total === 0) return null;
 
-  let cumulative = 0;
   const segments = data.map((item, i) => {
-    const start = cumulative;
+    const previousTotal = data.slice(0, i).reduce((sum, d) => sum + d.value, 0);
+    const start = (previousTotal / total) * 100;
     const percent = (item.value / total) * 100;
-    cumulative += percent;
     return `${colors[i % colors.length]} ${start.toFixed(1)}% ${(start + percent).toFixed(1)}%`;
   });
 
@@ -346,7 +345,7 @@ function AnalyzerContent() {
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
               <Loader2 className="h-10 w-10 text-primary-500 animate-spin mb-4" />
               <p className="text-neutral-500 dark:text-neutral-400">
-                {currentFollowUpRef.current || chatMessages.length > 0
+                {chatMessages.length > 0
                   ? "Thinking about your follow-up..."
                   : "Analyzing your food description..."}
               </p>

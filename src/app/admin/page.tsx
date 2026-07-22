@@ -11,7 +11,21 @@ import {
   MessageSquare,
   TrendingUp,
   ChefHat,
+  BarChart3,
 } from "lucide-react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+
+const PIE_COLORS = ["#E85D04", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899", "#06B6D4"];
 
 export default function AdminDashboardPage() {
   const { data, isLoading } = useQuery<ApiResponse<AdminDashboardStats>>({
@@ -68,6 +82,22 @@ export default function AdminDashboardPage() {
     },
   ];
 
+  const formattedCuisineData =
+    stats?.topCuisines?.map((c) => ({
+      name: c._id || "Other",
+      count: c.count,
+    })) || [];
+
+  const formattedUsersData =
+    stats?.usersPerDay?.map((d) => ({
+      date: new Date(d._id).toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "numeric",
+        day: "numeric",
+      }),
+      users: d.count,
+    })) || [];
+
   return (
     <div className="page-enter">
       <div className="mb-6 sm:mb-8">
@@ -92,7 +122,7 @@ export default function AdminDashboardPage() {
 
       {!isLoading && stats && (
         <>
-          {/* Stat Cards — 2 cols on mobile, 3 on desktop */}
+          {/* Stat Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
             {statCards.map((card) => {
               const Icon = card.icon;
@@ -133,101 +163,81 @@ export default function AdminDashboardPage() {
             })}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            {/* Top Cuisines */}
+          {/* Interactive Recharts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* User Registrations Bar Chart */}
             <div className="bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-neutral-100 dark:border-neutral-700">
-              <h2 className="text-base sm:text-lg font-bold text-neutral-800 dark:text-neutral-100 mb-3 sm:mb-4 flex items-center gap-2">
-                <ChefHat className="h-4 w-4 sm:h-5 sm:w-5 text-primary-500" />
-                Top Cuisines
+              <h2 className="text-base sm:text-lg font-bold text-neutral-800 dark:text-neutral-100 mb-4 flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-500" />
+                User Registrations (Last 7 Days)
               </h2>
-              {stats.topCuisines.length === 0 ? (
-                <p className="text-neutral-400 text-sm py-4">
-                  No data available
+              {formattedUsersData.length === 0 ? (
+                <p className="text-neutral-400 text-sm py-12 text-center">
+                  No registration data available
                 </p>
               ) : (
-                <div className="space-y-3">
-                  {stats.topCuisines.map((cuisine, idx) => {
-                    const maxCount = stats.topCuisines[0]?.count || 1;
-                    const percentage = (cuisine.count / maxCount) * 100;
-                    const colors = [
-                      "bg-primary-500",
-                      "bg-emerald-500",
-                      "bg-amber-500",
-                      "bg-purple-500",
-                      "bg-pink-500",
-                      "bg-cyan-500",
-                    ];
-                    return (
-                      <div key={cuisine._id}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate mr-2">
-                            {cuisine._id || "Unknown"}
-                          </span>
-                          <span className="text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-100 shrink-0">
-                            {cuisine.count}
-                          </span>
-                        </div>
-                        <div className="h-2 sm:h-2.5 bg-neutral-100 dark:bg-neutral-700 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${colors[idx % colors.length]} transition-all duration-1000 ease-out`}
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={formattedUsersData}>
+                      <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} />
+                      <YAxis stroke="#888888" fontSize={12} tickLine={false} allowDecimals={false} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#1F2937",
+                          borderColor: "#374151",
+                          color: "#F9FAFB",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      <Bar dataKey="users" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               )}
             </div>
 
-            {/* Users Per Day */}
+            {/* Top Cuisines Pie Chart */}
             <div className="bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-neutral-100 dark:border-neutral-700">
-              <h2 className="text-base sm:text-lg font-bold text-neutral-800 dark:text-neutral-100 mb-3 sm:mb-4 flex items-center gap-2">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
-                <span className="hidden sm:inline">
-                  User Registrations (Last 7 Days)
-                </span>
-                <span className="sm:hidden">Registrations (7d)</span>
+              <h2 className="text-base sm:text-lg font-bold text-neutral-800 dark:text-neutral-100 mb-4 flex items-center gap-2">
+                <ChefHat className="h-5 w-5 text-primary-500" />
+                Top Cuisines Breakdown
               </h2>
-              {stats.usersPerDay.length === 0 ? (
-                <p className="text-neutral-400 text-sm py-4">
-                  No registrations in the last 7 days
+              {formattedCuisineData.length === 0 ? (
+                <p className="text-neutral-400 text-sm py-12 text-center">
+                  No cuisine data available
                 </p>
               ) : (
-                <div className="space-y-3">
-                  {stats.usersPerDay.map((day) => {
-                    const maxCount = Math.max(
-                      ...stats.usersPerDay.map((d) => d.count),
-                      1,
-                    );
-                    const percentage = (day.count / maxCount) * 100;
-                    const dateStr = new Date(day._id).toLocaleDateString(
-                      "en-US",
-                      {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                      },
-                    );
-                    return (
-                      <div key={day._id}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
-                            {dateStr}
-                          </span>
-                          <span className="text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-100">
-                            {day.count}
-                          </span>
-                        </div>
-                        <div className="h-2 sm:h-2.5 bg-neutral-100 dark:bg-neutral-700 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-1000 ease-out"
-                            style={{ width: `${percentage}%` }}
+                <div className="h-64 w-full flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={formattedCuisineData}
+                        dataKey="count"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label={({ name, percent }: { name?: string; percent?: number }) =>
+                          `${name || "Other"} (${((percent || 0) * 100).toFixed(0)}%)`
+                        }
+                      >
+                        {formattedCuisineData.map((_, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={PIE_COLORS[index % PIE_COLORS.length]}
                           />
-                        </div>
-                      </div>
-                    );
-                  })}
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#1F2937",
+                          borderColor: "#374151",
+                          color: "#F9FAFB",
+                          borderRadius: "8px",
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
               )}
             </div>

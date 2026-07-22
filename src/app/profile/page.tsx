@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { toast } from "react-toastify";
+import { getErrorMessage } from "@/lib/utils";
 import AuthGuard from "@/components/layout/AuthGuard";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -32,10 +33,7 @@ function ProfileContent() {
       }).catch(() => {});
     },
     onError: (error: unknown) => {
-      const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Failed to update profile";
-      toast.error(msg);
+      toast.error(getErrorMessage(error, "Failed to update profile"));
     },
   });
 

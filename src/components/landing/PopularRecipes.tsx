@@ -4,17 +4,17 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import RecipeCard from "@/components/recipe/RecipeCard";
 import RecipeCardSkeleton from "@/components/recipe/RecipeCardSkeleton";
-import type { Recipe, ApiResponse, PaginatedData } from "@/types";
+import api from "@/lib/axios";
+import type { Recipe, ApiResponse } from "@/types";
 
 export default function PopularRecipes() {
   const { data, isLoading } = useQuery<ApiResponse<{ recipes: Recipe[] }>>({
     queryKey: ["popularRecipes"],
     queryFn: async () => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/recipes/popular?limit=4`
-      );
-      const json: ApiResponse<{ recipes: Recipe[] }> = await res.json();
-      return json;
+      const res = await api.get<ApiResponse<{ recipes: Recipe[] }>>("/recipes/popular", {
+        params: { limit: 4 },
+      });
+      return res.data;
     },
   });
 

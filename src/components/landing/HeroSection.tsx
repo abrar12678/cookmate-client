@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ChefHat } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 export default function HeroSection() {
