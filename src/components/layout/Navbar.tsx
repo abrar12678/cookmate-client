@@ -93,13 +93,23 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* Desktop — Public Links */}
+            {/* Desktop — Visible Navigation Links */}
             <div className="hidden md:flex items-center gap-1">
-              {publicLinks.map((link) => (
+              {(!user
+                ? publicLinks
+                : [
+                    { label: "Home", href: "/" },
+                    { label: "Explore", href: "/explore" },
+                    { label: "AI Generator", href: "/ai/generator" },
+                    { label: "AI Analyzer", href: "/ai/analyzer" },
+                    { label: "Add Recipe", href: "/recipe/add" },
+                    { label: "Favorites", href: "/favorites" },
+                  ]
+              ).map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`link-premium px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`link-premium px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
                     pathname === link.href
                       ? "text-primary-500 font-semibold bg-primary-50 dark:bg-primary-500/10"
                       : "text-neutral-600 dark:text-neutral-300 hover:text-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-500/5"
