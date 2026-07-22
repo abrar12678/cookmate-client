@@ -31,7 +31,7 @@ export default function Button({
   return (
     <button
       disabled={disabled || isLoading}
-      className={`btn-premium inline-flex items-center justify-center rounded-xl font-medium disabled:opacity-60 disabled:cursor-not-allowed ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      className={`btn-premium cursor-pointer inline-flex items-center justify-center rounded-xl font-medium disabled:opacity-60 disabled:cursor-not-allowed ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
       {...props}
     >
       {isLoading ? (
