@@ -93,10 +93,19 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* Desktop — Visible Navigation Links */}
+            {/* Desktop — Navigation Links based on Role & Auth Status */}
             <div className="hidden md:flex items-center gap-1">
               {(!user
                 ? publicLinks
+                : isAdmin
+                ? [
+                    { label: "Home", href: "/" },
+                    { label: "Explore", href: "/explore" },
+                    { label: "Dashboard", href: "/admin" },
+                    { label: "Users", href: "/admin/users" },
+                    { label: "Recipes", href: "/admin/recipes" },
+                    { label: "Reviews", href: "/admin/reviews" },
+                  ]
                 : [
                     { label: "Home", href: "/" },
                     { label: "Explore", href: "/explore" },

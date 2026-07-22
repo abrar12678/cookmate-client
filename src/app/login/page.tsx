@@ -54,12 +54,6 @@ function LoginContent() {
     setErrors({});
   };
 
-  const handleDemoAdminFill = () => {
-    setEmail("admin@cookmate.com");
-    setPassword("Admin@123456");
-    setErrors({});
-  };
-
   return (
     <div className="max-w-md mx-auto mt-20 px-4">
       <div className="bg-white dark:bg-neutral-800 p-8 rounded-2xl shadow-lg border border-neutral-100 dark:border-neutral-700">
@@ -150,20 +144,13 @@ function LoginContent() {
         </form>
 
         {/* Demo Login */}
-        <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-700/60">
+        <div className="text-center mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-700/60">
           <button
             type="button"
             onClick={handleDemoFill}
-            className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-md hover:bg-emerald-100 transition cursor-pointer"
+            className="text-sm font-medium text-primary-500 hover:underline cursor-pointer"
           >
-            Demo User
-          </button>
-          <button
-            type="button"
-            onClick={handleDemoAdminFill}
-            className="text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-md hover:bg-amber-100 transition cursor-pointer"
-          >
-            Demo Admin
+            Try Demo Account
           </button>
         </div>
 
